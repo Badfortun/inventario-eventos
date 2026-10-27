@@ -1,0 +1,25 @@
+# El plan gratuito de Supabase pausa el proyecto tras ~1 semana sin uso.
+# Esta tarea hace una consulta mínima cada día para evitarlo.
+# Requiere los "secrets" del repositorio: SUPABASE_URL y SUPABASE_ANON_KEY.
+name: Mantener Supabase activo
+
+on:
+  schedule:
+    - cron: '17 14 * * *'   # todos los días, 8:17 a.m. hora del centro de México
+  workflow_dispatch:
+
+jobs:
+  latido:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Consulta mínima
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "::error::Faltan los secrets SUPABASE_URL y/o SUPABASE_ANON_KEY"; exit 1
+          fi
+          respuesta=$(curl -sS -f -X POST "$SUPABASE_URL/rest/v1/rpc/ping" \
+            -H "apikey: $SUPABASE_ANON_KEY" -H "Content-Type: application/json" -d '{}')
+          echo "Respuesta: $respuesta"
