@@ -1,0 +1,40 @@
+# Publica la carpeta web/ en GitHub Pages cada vez que se sube un cambio.
+name: Publicar app web
+
+on:
+  push:
+    branches: [main]
+    paths: ['web/**', '.github/workflows/publicar-web.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.despliegue.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Revisar que config.js tenga datos reales
+        run: |
+          if grep -q "TU-PROYECTO\|PEGA-AQUI" web/config.js; then
+            echo "::warning::web/config.js todavía tiene los valores de ejemplo. La app mostrará 'Falta configurar'."
+          fi
+          if grep -qi "service_role" web/config.js; then
+            echo "::error::¡config.js parece contener la service_role key! Nunca la publiques."; exit 1
+          fi
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+      - id: despliegue
+        uses: actions/deploy-pages@v4
