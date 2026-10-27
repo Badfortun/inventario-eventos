@@ -6,8 +6,8 @@
 // "service_role key".
 // =====================================================================
 export const CONFIG = {
-  SUPABASE_URL: 'https://TU-PROYECTO.supabase.co',
-  SUPABASE_ANON_KEY: 'PEGA-AQUI-TU-ANON-PUBLIC-KEY',
+  SUPABASE_URL: 'https://ydqvmqelchbxrindzqlz.supabase.co',
+  SUPABASE_ANON_KEY: 'sb_publishable_0mJbM0WH3WtETrArHWgUyw_sM1DjC4S',
 
   // Los usuarios entran con un nombre de usuario (ej. "pedro"). Por dentro
   // Supabase necesita un correo, así que se forma como pedro@<dominio>.
