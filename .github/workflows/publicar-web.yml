@@ -1,10 +1,13 @@
-# Publica la carpeta web/ en GitHub Pages cada vez que se sube un cambio.
+
+# Publica la carpeta web/ en GitHub Pages.
 name: Publicar app web
 
 on:
   push:
     branches: [main]
-    paths: ['web/**', '.github/workflows/publicar-web.yml']
+    paths:
+      - 'web/**'
+      - '.github/workflows/publicar-web.yml'
   workflow_dispatch:
 
 permissions:
@@ -22,19 +25,30 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.despliegue.outputs.page_url }}
+
     steps:
       - uses: actions/checkout@v4
-      - name: Revisar que config.js tenga datos reales
+
+      - name: Revisar configuración de Supabase
+        shell: bash
         run: |
-          if grep -q "TU-PROYECTO\|PEGA-AQUI" web/config.js; then
-            echo "::warning::web/config.js todavía tiene los valores de ejemplo. La app mostrará 'Falta configurar'."
+          if grep -Eq 'TU-PROYECTO|PEGA-AQUI' web/config.js; then
+            echo "::error::web/config.js todavía contiene valores de ejemplo."
+            exit 1
           fi
-          if grep -qi "service_role" web/config.js; then
-            echo "::error::¡config.js parece contener la service_role key! Nunca la publiques."; exit 1
+
+          if grep -Eq 'service_role|sb_secret_' web/config.js; then
+            echo "::error::No publiques claves secretas en config.js."
+            exit 1
           fi
+
+          echo "Configuración revisada."
+
       - uses: actions/configure-pages@v5
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: web
+
       - id: despliegue
         uses: actions/deploy-pages@v4
