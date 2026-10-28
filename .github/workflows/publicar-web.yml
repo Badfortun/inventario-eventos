@@ -1,13 +1,9 @@
-
-# Publica la carpeta web/ en GitHub Pages.
+# Publica la carpeta web/ en GitHub Pages cada vez que se sube un cambio.
 name: Publicar app web
 
 on:
   push:
     branches: [main]
-    paths:
-      - 'web/**'
-      - '.github/workflows/publicar-web.yml'
   workflow_dispatch:
 
 permissions:
@@ -25,30 +21,27 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.despliegue.outputs.page_url }}
-
     steps:
       - uses: actions/checkout@v4
 
       - name: Revisar configuración de Supabase
-        shell: bash
         run: |
-          if grep -Eq 'TU-PROYECTO|PEGA-AQUI' web/config.js; then
-            echo "::error::web/config.js todavía contiene valores de ejemplo."
+          # Solo se revisan las líneas con valores (no los comentarios)
+          URL_LINEA=$(grep -E "^\s*SUPABASE_URL\s*:" web/config.js || true)
+          KEY_LINEA=$(grep -E "^\s*SUPABASE_ANON_KEY\s*:" web/config.js || true)
+          if echo "$URL_LINEA $KEY_LINEA" | grep -Eq 'TU-PROYECTO|PEGA-AQUI'; then
+            echo "::error::web/config.js todavía tiene los valores de ejemplo."
             exit 1
           fi
-
-          if grep -Eq 'service_role|sb_secret_' web/config.js; then
-            echo "::error::No publiques claves secretas en config.js."
+          if echo "$KEY_LINEA" | grep -Eqi 'sb_secret_|service_role'; then
+            echo "::error::La clave en config.js es SECRETA. Usa la 'publishable' o 'anon public'."
             exit 1
           fi
-
-          echo "Configuración revisada."
+          echo "Configuración revisada: $URL_LINEA"
 
       - uses: actions/configure-pages@v5
-
       - uses: actions/upload-pages-artifact@v3
         with:
           path: web
-
       - id: despliegue
         uses: actions/deploy-pages@v4
